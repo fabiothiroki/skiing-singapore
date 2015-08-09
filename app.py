@@ -66,5 +66,5 @@ def list_of_adjacent_nodes(matrix, line, column):
 
 input_text = read_input()
 matrix = create_graph_matrix(input_text)
-populate_adjacency_list(matrix)
+adjacency_list = populate_adjacency_list(matrix)
 
