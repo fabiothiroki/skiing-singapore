@@ -3,6 +3,8 @@
 import sys
 import pprint
 
+pp = pprint.PrettyPrinter(indent=4)
+
 def read_input():
 
 	with open(sys.argv[1], 'r') as my_file:
@@ -20,7 +22,7 @@ def create_graph_matrix(input_text):
 
 	matrix = []
 
-	for line in range(1, int(num_lines)):
+	for line in range(1, int(num_lines)+1):
 		current_line = txt_lines[line].split(' ', int(num_columns) - 1 )
 
 		list_current_line = []
@@ -34,18 +36,33 @@ def create_graph_matrix(input_text):
 
 
 def populate_adjacency_list(matrix):
+	
 	adjacencyDict = {}
 
 	for line in range(0, len(matrix)):
 		
 		for column in range (0, len(matrix[0])):
-			adjacencyDict['  ']
+			adjacencyDict[str(line) + ' ' + str(column)] = list_of_adjacent_nodes(matrix, line, column)
+
+	pp.pprint(adjacencyDict)
 
 
-def list_of_adjacent_nodes(matrx, line, column):
+def list_of_adjacent_nodes(matrix, line, column):
+	adjacent_nodes = []
 
-	return 'a'	
+	if (line - 1 >= 0) and matrix[line - 1][column] < matrix[line][column]:
+		adjacent_nodes.append(str(line - 1) + ' ' + str(column))
 
+	if (column + 1 < len(matrix[0]) ) and matrix[line][column + 1] < matrix[line][column]:
+		adjacent_nodes.append(str(line) + ' ' + str(column + 1))
+
+	if (line + 1 < len(matrix) ) and matrix[line + 1][column] < matrix[line][column]:
+		adjacent_nodes.append(str(line + 1) + ' ' + str(column))
+
+	if (column - 1 >= 0) and matrix[line][column - 1] < matrix[line][column]:
+		adjacent_nodes.append(str(line) + ' ' + str(column - 1))
+
+	return adjacent_nodes
 
 input_text = read_input()
 matrix = create_graph_matrix(input_text)
