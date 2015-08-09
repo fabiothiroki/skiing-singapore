@@ -5,6 +5,9 @@ import pprint
 
 pp = pprint.PrettyPrinter(indent=4)
 
+MAX_DISTANCE = 1501
+NO_EDGE_WEIGHT = -999999
+
 def read_input():
 
 	with open(sys.argv[1], 'r') as my_file:
@@ -44,7 +47,7 @@ def populate_adjacency_list(matrix):
 		for column in range (0, len(matrix[0])):
 			adjacencyDict[str(line) + ' ' + str(column)] = list_of_adjacent_nodes(matrix, line, column)
 
-	pp.pprint(adjacencyDict)
+	return adjacencyDict
 
 
 def list_of_adjacent_nodes(matrix, line, column):
@@ -64,7 +67,38 @@ def list_of_adjacent_nodes(matrix, line, column):
 
 	return adjacent_nodes
 
+def init_floyd_warshall(adjacency_list):
+	dist = {}
+	pred = {}
+
+	for u in adjacency_list:
+		dist[u] = {}
+		pred[u] = {}
+		for v in adjacency_list:
+			dist[u][v] = -999999
+			pred[u][v] = -1
+		dist[u][u] = 0
+		for neighbor in adjacency_list[u]:
+			dist[u][neighbor] = 1
+			pred[u][neighbor] = u
+
+	return dist, pred
+
+def inverse_floyd_warshall(adjacency_list, dist, pred):
+	for t in adjacency_list:
+		# given dist u to v, check if path u - t - v is shorter
+		for u in adjacency_list:
+			for v in adjacency_list:
+				newdist = dist[u][t] + dist[t][v]
+				if newdist > dist[u][v]:
+					dist[u][v] = newdist
+					pred[u][v] = pred[t][v] # route new path through t
+
+	pp.pprint(dist)
+
+
 input_text = read_input()
 matrix = create_graph_matrix(input_text)
 adjacency_list = populate_adjacency_list(matrix)
-
+dist, pred = init_floyd_warshall(adjacency_list)
+inverse_floyd_warshall(adjacency_list, dist, pred)
