@@ -74,7 +74,7 @@ def init_floyd_warshall(adjacency_list):
 		dist[u] = {}
 		pred[u] = {}
 		for v in adjacency_list:
-			dist[u][v] = -999999
+			dist[u][v] = -1501
 			pred[u][v] = -1
 		dist[u][u] = 0
 		for neighbor in adjacency_list[u]:
