@@ -5,8 +5,7 @@ import pprint
 
 pp = pprint.PrettyPrinter(indent=4)
 
-MAX_DISTANCE = 1501
-NO_EDGE_WEIGHT = -999999
+NO_EDGE_WEIGHT = 0
 
 def read_input():
 
@@ -86,7 +85,7 @@ def init_floyd_warshall(adjacency_list):
 
 def inverse_floyd_warshall(adjacency_list, dist, pred):
 	for t in adjacency_list:
-		# given dist u to v, check if path u - t - v is shorter
+		# given dist u to v, check if path u - t - v is longer
 		for u in adjacency_list:
 			for v in adjacency_list:
 				newdist = dist[u][t] + dist[t][v]
@@ -94,11 +93,38 @@ def inverse_floyd_warshall(adjacency_list, dist, pred):
 					dist[u][v] = newdist
 					pred[u][v] = pred[t][v] # route new path through t
 
-	pp.pprint(dist)
+	return dist, pred
 
+def find_longest_distance(adjacency_list, dist, pred, matrix):
+
+	longest_routes = {}
+	longest_distance = 0;
+
+	for u in dist:
+		for v in dist[u]:
+			if dist[u][v] >= longest_distance:
+				longest_distance = dist[u][v]
+
+	for u in dist:
+		for v in dist[u]:
+			if dist[u][v] == longest_distance:
+				# starts at u, ends at v
+				getPath(pred,u,v, matrix)
+				print ''
+
+def getPath(pred, start, end, matrix):
+
+	if start == end:
+		print matrix[int(start.split(' ',1)[0])][int(start.split(' ',1)[1])]
+	elif pred[start][end] < 0:
+		print "Path does not exist"
+	else:
+		getPath(pred, start, pred[start][end], matrix)
+		print matrix[int(end.split(' ',1)[0])][int(end.split(' ',1)[1])]
 
 input_text = read_input()
 matrix = create_graph_matrix(input_text)
 adjacency_list = populate_adjacency_list(matrix)
 dist, pred = init_floyd_warshall(adjacency_list)
-inverse_floyd_warshall(adjacency_list, dist, pred)
+dist, pred = inverse_floyd_warshall(adjacency_list, dist, pred)
+find_longest_distance(adjacency_list, dist, pred, matrix)
