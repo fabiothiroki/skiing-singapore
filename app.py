@@ -68,33 +68,74 @@ def list_of_adjacent_nodes(matrix, line, column):
 	return adjacent_nodes
 
 def init_floyd_warshall(adjacency_list):
-	dist = {}
-	pred = {}
+	# dist = {}
+	# pred = {}
+
+	conn = sqlite3.connect("mydatabase.db")
+	cursor = conn.cursor()
 
 	for u in adjacency_list:
-		dist[u] = {}
-		pred[u] = {}
+		# dist[u] = {}
+		# pred[u] = {}
 		for v in adjacency_list:
-			dist[u][v] = -1501
-			pred[u][v] = -1
-		dist[u][u] = 0
+			# dist[u][v] = -1501
+			cursor.execute("insert into dist values (?, ?, ?)", (u, v, -9999999))
+			
+			# pred[u][v] = -1
+			cursor.execute("insert into pred values (?, ?, ?)", (u, v, ""))
+
+			# cursor.execute("select count(*) from dist")
+			# print cursor.fetchone()
+
+		# dist[u][u] = 0
+		cursor.execute("insert into dist values (?, ?, ?)", (u, u, 0))
+
 		for neighbor in adjacency_list[u]:
-			dist[u][neighbor] = 1
-			pred[u][neighbor] = u
+			# dist[u][neighbor] = 1
+			cursor.execute("update dist set from_node=?, to_node=?, dist=? where from_node=? and to_node=?", (u, neighbor, 1, u, neighbor))
 
-	return dist, pred
+			# pred[u][neighbor] = u
+			cursor.execute("update pred set from_node=?, to_node=?, pred_node=? where from_node=? and to_node=?", (u, neighbor, u, u, neighbor))
 
-def inverse_floyd_warshall(adjacency_list, dist, pred):
+	# pp.pprint(pred)
+
+	conn.commit()
+	conn.close()
+
+def inverse_floyd_warshall(adjacency_list):
+	conn = sqlite3.connect("mydatabase.db")
+	cursor = conn.cursor()
+
 	for t in adjacency_list:
 		# given dist u to v, check if path u - t - v is longer
 		for u in adjacency_list:
 			for v in adjacency_list:
-				newdist = dist[u][t] + dist[t][v]
-				if newdist > dist[u][v]:
-					dist[u][v] = newdist
-					pred[u][v] = pred[t][v] # route new path through t
 
-	return dist, pred
+				cursor.execute("select dist from dist where from_node=? and to_node=? limit 1", (u, t))
+				dist_u_t = cursor.fetchone()[0]
+
+				cursor.execute("select dist from dist where from_node=? and to_node=? limit 1", (t, v))
+				dist_t_v = cursor.fetchone()[0]
+
+				cursor.execute("select dist from dist where from_node=? and to_node=? limit 1", (u, v))
+				dist_u_v = cursor.fetchone()[0]
+
+				newdist = dist_u_t + dist_t_v
+
+				if newdist > dist_u_v:
+					cursor.execute("update dist set dist_u_v=? where from_node=? and to_node=?", (newdist, u, v))
+
+					cursor.execute("select pred_node from pred where from_node=? and to_node=? limit 1", (t, v))
+					pred_t_v = cursor.fetchone()[0]
+
+					cursor.execute("update pred set pred_node=? where from_node=? and to_node=?", (pred_t_v, u, v))
+
+					# dist[u][v] = newdist
+					# pred[u][v] = pred[t][v] # route new path through t
+					conn.commit()
+	
+	conn.close()
+	# return dist, pred
 
 def find_longest_distance(adjacency_list, dist, pred, matrix):
 
@@ -128,22 +169,23 @@ def init_database(adjacency_list):
 	cursor = conn.cursor()
 
 	cursor.execute("DROP TABLE IF EXISTS dist")
+	cursor.execute("DROP TABLE IF EXISTS pred")
 
 	cursor.execute("""CREATE TABLE dist
                  (from_node text, to_node text, dist integer)
               """)
 
 	cursor.execute("""CREATE TABLE pred
-                 (from_node text, pred_node, text)
+                 (from_node text, to_node text, pred_node text)
               """)
 
 	conn.commit()
-	con.close()
+	conn.close()
 
 input_text = read_input()
 matrix = create_graph_matrix(input_text)
 adjacency_list = populate_adjacency_list(matrix)
 init_database(adjacency_list)
-# dist, pred = init_floyd_warshall(adjacency_list)
-# dist, pred = inverse_floyd_warshall(adjacency_list, dist, pred)
+init_floyd_warshall(adjacency_list)
+inverse_floyd_warshall(adjacency_list)
 # find_longest_distance(adjacency_list, dist, pred, matrix)
