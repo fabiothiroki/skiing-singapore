@@ -84,18 +84,18 @@ def init_floyd_warshall(adjacency_list):
 			# pred[u][v] = -1
 			cursor.execute("insert into pred values (?, ?, ?)", (u, v, ""))
 
-			# cursor.execute("select count(*) from dist")
-			# print cursor.fetchone()
+			cursor.execute("select count(*) from dist")
+			print cursor.fetchone()
 
 		# dist[u][u] = 0
 		cursor.execute("insert into dist values (?, ?, ?)", (u, u, 0))
 
 		for neighbor in adjacency_list[u]:
 			# dist[u][neighbor] = 1
-			cursor.execute("update dist set from_node=?, to_node=?, dist=? where from_node=? and to_node=?", (u, neighbor, 1, u, neighbor))
+			cursor.execute("update dist set dist=? where from_node=? and to_node=?", (1, u, neighbor))
 
 			# pred[u][neighbor] = u
-			cursor.execute("update pred set from_node=?, to_node=?, pred_node=? where from_node=? and to_node=?", (u, neighbor, u, u, neighbor))
+			cursor.execute("update pred set pred_node=? where from_node=? and to_node=?", (u, u, neighbor))
 
 	# pp.pprint(pred)
 
@@ -153,13 +153,6 @@ def find_longest_distance(adjacency_list, matrix):
 	for route in results:
 		getPath(route[0],route[1], matrix, cursor)
 		print ''
-
-	# for u in dist:
-	# 	for v in dist[u]:
-	# 		if dist[u][v] == longest_distance:
-	# 			# starts at u, ends at v
-	# 			getPath(pred,u,v, matrix)
-	# 			print ''
 
 	conn.close()
 
