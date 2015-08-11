@@ -2,6 +2,7 @@
 
 import sys
 import pprint
+import sqlite3
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -122,9 +123,27 @@ def getPath(pred, start, end, matrix):
 		getPath(pred, start, pred[start][end], matrix)
 		print matrix[int(end.split(' ',1)[0])][int(end.split(' ',1)[1])]
 
+def init_database(adjacency_list):
+	conn = sqlite3.connect("mydatabase.db")
+	cursor = conn.cursor()
+
+	cursor.execute("DROP TABLE IF EXISTS dist")
+
+	cursor.execute("""CREATE TABLE dist
+                 (from_node text, to_node text, dist integer)
+              """)
+
+	cursor.execute("""CREATE TABLE pred
+                 (from_node text, pred_node, text)
+              """)
+
+	conn.commit()
+	con.close()
+
 input_text = read_input()
 matrix = create_graph_matrix(input_text)
 adjacency_list = populate_adjacency_list(matrix)
-dist, pred = init_floyd_warshall(adjacency_list)
-dist, pred = inverse_floyd_warshall(adjacency_list, dist, pred)
-find_longest_distance(adjacency_list, dist, pred, matrix)
+init_database(adjacency_list)
+# dist, pred = init_floyd_warshall(adjacency_list)
+# dist, pred = inverse_floyd_warshall(adjacency_list, dist, pred)
+# find_longest_distance(adjacency_list, dist, pred, matrix)
