@@ -123,7 +123,7 @@ def inverse_floyd_warshall(adjacency_list):
 				newdist = dist_u_t + dist_t_v
 
 				if newdist > dist_u_v:
-					cursor.execute("update dist set dist_u_v=? where from_node=? and to_node=?", (newdist, u, v))
+					cursor.execute("update dist set dist=? where from_node=? and to_node=?", (newdist, u, v))
 
 					cursor.execute("select pred_node from pred where from_node=? and to_node=? limit 1", (t, v))
 					pred_t_v = cursor.fetchone()[0]
@@ -137,32 +137,45 @@ def inverse_floyd_warshall(adjacency_list):
 	conn.close()
 	# return dist, pred
 
-def find_longest_distance(adjacency_list, dist, pred, matrix):
+def find_longest_distance(adjacency_list, matrix):
+	conn = sqlite3.connect("mydatabase.db")
+	cursor = conn.cursor()
 
 	longest_routes = {}
-	longest_distance = 0;
 
-	for u in dist:
-		for v in dist[u]:
-			if dist[u][v] >= longest_distance:
-				longest_distance = dist[u][v]
+	cursor.execute("select max(dist) from dist limit 1")
+	longest_distance = cursor.fetchone()[0]
 
-	for u in dist:
-		for v in dist[u]:
-			if dist[u][v] == longest_distance:
-				# starts at u, ends at v
-				getPath(pred,u,v, matrix)
-				print ''
+	cursor.execute("select from_node, to_node from dist where dist=?", [longest_distance])
 
-def getPath(pred, start, end, matrix):
+	results = cursor.fetchall()	
+
+	for route in results:
+		getPath(route[0],route[1], matrix, cursor)
+		print ''
+
+	# for u in dist:
+	# 	for v in dist[u]:
+	# 		if dist[u][v] == longest_distance:
+	# 			# starts at u, ends at v
+	# 			getPath(pred,u,v, matrix)
+	# 			print ''
+
+	conn.close()
+
+def getPath(start, end, matrix, cursor):
 
 	if start == end:
 		print matrix[int(start.split(' ',1)[0])][int(start.split(' ',1)[1])]
-	elif pred[start][end] < 0:
-		print "Path does not exist"
 	else:
-		getPath(pred, start, pred[start][end], matrix)
-		print matrix[int(end.split(' ',1)[0])][int(end.split(' ',1)[1])]
+		cursor.execute("select pred_node from pred where from_node=? and to_node=?", (start, end))
+		pred_node = cursor.fetchone()[0]
+
+		if pred_node == "":
+			print "Path does not exist"
+		else:
+			getPath(start, pred_node, matrix, cursor)
+			print matrix[int(end.split(' ',1)[0])][int(end.split(' ',1)[1])]
 
 def init_database(adjacency_list):
 	conn = sqlite3.connect("mydatabase.db")
@@ -188,4 +201,4 @@ adjacency_list = populate_adjacency_list(matrix)
 init_database(adjacency_list)
 init_floyd_warshall(adjacency_list)
 inverse_floyd_warshall(adjacency_list)
-# find_longest_distance(adjacency_list, dist, pred, matrix)
+find_longest_distance(adjacency_list, matrix)
