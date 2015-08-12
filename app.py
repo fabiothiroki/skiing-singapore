@@ -85,11 +85,8 @@ def init_floyd_warshall(adjacency_list):
 			# pred[u][v] = -1
 			# cursor.execute("insert into pred values (?, ?, ?)", (u, v, ""))
 
-		# print i, len(adjacency_list)
+		print 'i', i, len(adjacency_list)
 		i = i + 1
-
-		# dist[u][u] = 0
-		cursor.execute("insert into dist values (?, ?, ?)", (u, u, 0))
 
 		for neighbor in adjacency_list[u]:
 			# dist[u][neighbor] = 1
@@ -109,10 +106,15 @@ def inverse_floyd_warshall(adjacency_list):
 	conn = sqlite3.connect("mydatabase.db")
 	cursor = conn.cursor()
 
+	j = 0
 	for t in adjacency_list:
+
 		# given dist u to v, check if path u - t - v is longer
 		for u in adjacency_list:
 			for v in adjacency_list:
+
+				print 'j', j, len(adjacency_list)
+				j = j + 1
 
 				cursor.execute("select dist from dist where from_node=? and to_node=? limit 1", (u, t))
 				try:
