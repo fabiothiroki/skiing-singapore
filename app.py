@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import division
 
 import sys
 import pprint
@@ -106,6 +107,8 @@ def inverse_floyd_warshall(adjacency_list):
 	conn = sqlite3.connect("mydatabase.db")
 	cursor = conn.cursor()
 
+	total = len(adjacency_list) * len(adjacency_list) * len(adjacency_list)
+
 	j = 0
 	for t in adjacency_list:
 
@@ -113,7 +116,7 @@ def inverse_floyd_warshall(adjacency_list):
 		for u in adjacency_list:
 			for v in adjacency_list:
 
-				print 'j', j, len(adjacency_list)
+				print (j / total) * 100
 				j = j + 1
 
 				cursor.execute("select dist from dist where from_node=? and to_node=? limit 1", (u, t))
