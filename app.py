@@ -74,28 +74,31 @@ def init_floyd_warshall(adjacency_list):
 	conn = sqlite3.connect("mydatabase.db")
 	cursor = conn.cursor()
 
+	i = 0
 	for u in adjacency_list:
 		# dist[u] = {}
 		# pred[u] = {}
-		for v in adjacency_list:
+		# for v in adjacency_list:
 			# dist[u][v] = -1501
-			cursor.execute("insert into dist values (?, ?, ?)", (u, v, -9999999))
+			# cursor.execute("insert into dist values (?, ?, ?)", (u, v, -9999999))
 			
 			# pred[u][v] = -1
-			cursor.execute("insert into pred values (?, ?, ?)", (u, v, ""))
+			# cursor.execute("insert into pred values (?, ?, ?)", (u, v, ""))
 
-			cursor.execute("select count(*) from dist")
-			print cursor.fetchone()
+		# print i, len(adjacency_list)
+		i = i + 1
 
 		# dist[u][u] = 0
 		cursor.execute("insert into dist values (?, ?, ?)", (u, u, 0))
 
 		for neighbor in adjacency_list[u]:
 			# dist[u][neighbor] = 1
-			cursor.execute("update dist set dist=? where from_node=? and to_node=?", (1, u, neighbor))
+			# cursor.execute("update dist set dist=? where from_node=? and to_node=?", (1, u, neighbor))
+			cursor.execute("insert into dist values (?, ?, ?)", (u, neighbor, 1))
 
 			# pred[u][neighbor] = u
-			cursor.execute("update pred set pred_node=? where from_node=? and to_node=?", (u, u, neighbor))
+			# cursor.execute("update pred set pred_node=? where from_node=? and to_node=?", (u, u, neighbor))
+			cursor.execute("insert into pred values (?, ?, ?)", (u, neighbor, u))
 
 	# pp.pprint(pred)
 
@@ -112,23 +115,42 @@ def inverse_floyd_warshall(adjacency_list):
 			for v in adjacency_list:
 
 				cursor.execute("select dist from dist where from_node=? and to_node=? limit 1", (u, t))
-				dist_u_t = cursor.fetchone()[0]
+				try:
+					dist_u_t = cursor.fetchone()[0]
+				except TypeError:
+					dist_u_t = -999999
+
 
 				cursor.execute("select dist from dist where from_node=? and to_node=? limit 1", (t, v))
-				dist_t_v = cursor.fetchone()[0]
+				try:
+					dist_t_v = cursor.fetchone()[0]
+				except TypeError:
+					dist_t_v = -999999
 
 				cursor.execute("select dist from dist where from_node=? and to_node=? limit 1", (u, v))
-				dist_u_v = cursor.fetchone()[0]
+				try:
+					dist_u_v = cursor.fetchone()[0]
+				except:
+					dist_u_v = -999999
 
 				newdist = dist_u_t + dist_t_v
 
-				if newdist > dist_u_v:
-					cursor.execute("update dist set dist=? where from_node=? and to_node=?", (newdist, u, v))
+				if newdist > 0 and newdist > dist_u_v:
+
+					if dist_u_v < 0:
+						cursor.execute("insert into dist values (?, ?, ?)", (u, v, newdist))
+					else:
+						cursor.execute("update dist set dist=? where from_node=? and to_node=?", (newdist, u, v))
 
 					cursor.execute("select pred_node from pred where from_node=? and to_node=? limit 1", (t, v))
 					pred_t_v = cursor.fetchone()[0]
 
-					cursor.execute("update pred set pred_node=? where from_node=? and to_node=?", (pred_t_v, u, v))
+					cursor.execute("select count(*) from pred where from_node=? and to_node=? limit 1", (u, v))
+					
+					if cursor.fetchone()[0] == 1:
+						cursor.execute("update pred set pred_node=? where from_node=? and to_node=?", (pred_t_v, u, v))
+					else:
+						cursor.execute("insert into pred values (?, ?, ?)", (u, v, pred_t_v))
 
 					# dist[u][v] = newdist
 					# pred[u][v] = pred[t][v] # route new path through t
