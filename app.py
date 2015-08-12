@@ -209,6 +209,11 @@ def init_database(adjacency_list):
                  (from_node text, to_node text, pred_node text)
               """)
 
+	cursor.execute("DROP INDEX IF EXISTS dist_index")
+	cursor.execute("DROP INDEX IF EXISTS pred_index")
+	cursor.execute("CREATE INDEX dist_index on dist (from_node, to_node)")
+	cursor.execute("CREATE INDEX pred_index on pred (from_node, to_node)")
+
 	conn.commit()
 	conn.close()
 
