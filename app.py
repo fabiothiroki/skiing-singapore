@@ -129,34 +129,35 @@ def inverse_floyd_warshall(adjacency_list):
 				except TypeError:
 					dist_t_v = -999999
 
-				cursor.execute("select dist from dist where from_node=? and to_node=? limit 1", (u, v))
-				try:
-					dist_u_v = cursor.fetchone()[0]
-				except:
-					dist_u_v = -999999
-
 				newdist = dist_u_t + dist_t_v
 
-				if newdist > 0 and newdist > dist_u_v:
+				if newdist > 0 :
 
-					if dist_u_v < 0:
-						cursor.execute("insert into dist values (?, ?, ?)", (u, v, newdist))
-					else:
-						cursor.execute("update dist set dist=? where from_node=? and to_node=?", (newdist, u, v))
+					cursor.execute("select dist from dist where from_node=? and to_node=? limit 1", (u, v))
+					try:
+						dist_u_v = cursor.fetchone()[0]
+					except:
+						dist_u_v = -999999
 
-					cursor.execute("select pred_node from pred where from_node=? and to_node=? limit 1", (t, v))
-					pred_t_v = cursor.fetchone()[0]
+					if newdist > dist_u_v:
+						if dist_u_v < 0:
+							cursor.execute("insert into dist values (?, ?, ?)", (u, v, newdist))
+						else:
+							cursor.execute("update dist set dist=? where from_node=? and to_node=?", (newdist, u, v))
 
-					cursor.execute("select count(*) from pred where from_node=? and to_node=? limit 1", (u, v))
-					
-					if cursor.fetchone()[0] == 1:
-						cursor.execute("update pred set pred_node=? where from_node=? and to_node=?", (pred_t_v, u, v))
-					else:
-						cursor.execute("insert into pred values (?, ?, ?)", (u, v, pred_t_v))
+						cursor.execute("select pred_node from pred where from_node=? and to_node=? limit 1", (t, v))
+						pred_t_v = cursor.fetchone()[0]
 
-					# dist[u][v] = newdist
-					# pred[u][v] = pred[t][v] # route new path through t
-					conn.commit()
+						cursor.execute("select count(*) from pred where from_node=? and to_node=? limit 1", (u, v))
+						
+						if cursor.fetchone()[0] == 1:
+							cursor.execute("update pred set pred_node=? where from_node=? and to_node=?", (pred_t_v, u, v))
+						else:
+							cursor.execute("insert into pred values (?, ?, ?)", (u, v, pred_t_v))
+
+						# dist[u][v] = newdist
+						# pred[u][v] = pred[t][v] # route new path through t
+						conn.commit()
 	
 	conn.close()
 	# return dist, pred
